@@ -4,7 +4,7 @@ import {
   isAuthenticated,
 } from "../middlewares/auth.middleware";
 import { upload } from "../middlewares/multer.middleware";
-import { createCategory, getAllCategories } from "../controller/category.controller";
+import { createCategory, getAllCategories, getCategoryById, searchCategory } from "../controller/category.controller";
 
 const categoryRouter = express.Router();
 
@@ -15,6 +15,8 @@ categoryRouter.post(
   upload.array("category_images", 4),
   createCategory
 );
-categoryRouter.get("/get-all-categories", isAuthenticated, authorizeRoles("admin"), getAllCategories);
+categoryRouter.get("/get-all-categories", getAllCategories);
+categoryRouter.get("/get-categoryById/:categoryId", getCategoryById);
+categoryRouter.get("/search-categories", isAuthenticated, authorizeRoles("admin"), searchCategory);
 
 export default categoryRouter;

@@ -3,6 +3,7 @@ import { CatchAsyncError } from "../middlewares/asyncerror.middleware";
 import ErrorHandler from "../utils/ErrorHandler";
 import { uploadOnCloudinary } from "../utils/cloudinary";
 import { Category } from "../models/category.model";
+import mongoose from "mongoose";
 
 interface ICreateCategory {
   category_name: string;
@@ -21,7 +22,7 @@ export const createCategory = CatchAsyncError(
       return next(new ErrorHandler("Atleast 4 images are required!", 400));
     }
     const files = req.files as Express.Multer.File[];
-    
+
     const uploadResults = await Promise.all(
       files.map((file) => uploadOnCloudinary(file.path))
     );
@@ -55,7 +56,9 @@ export const createCategory = CatchAsyncError(
 export const getAllCategories = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const response = await Category.find().select("-category_images -createdAt -updatedAt -__v");
+      const response = await Category.find().select(
+        "-createdAt -updatedAt -__v"
+      );
       return res.status(200).json({
         success: true,
         categories: response,
@@ -67,6 +70,49 @@ export const getAllCategories = CatchAsyncError(
           500
         )
       );
+    }
+  }
+);
+
+export const searchCategory = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const searchKey = ((req.query.searchKey as string) || "").trim();
+    if (!searchKey)
+      return next(new ErrorHandler("search key is required!", 400));
+    try {
+      const category = await Category.find({
+        category_name: {
+          $regex: searchKey,
+          $options: "i",
+        },
+      });
+      return res.status(200).json({
+        success: true,
+        category,
+      });
+    } catch (error: any) {
+      return next(new ErrorHandler(error?.message, 500));
+    }
+  }
+);
+
+export const getCategoryById = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { categoryId } = req.params;
+    if (!categoryId)
+      return next(new ErrorHandler("category id is required!", 400));
+    if (!mongoose.Types.ObjectId.isValid(categoryId)) {
+      return next(new ErrorHandler("Invalid product id format!", 400));
+    }
+    try {
+      const category = await Category.findById(categoryId);
+      if(!category) return next(new ErrorHandler("category not found!", 404));
+      return res.status(200).json({
+        success: true,
+        category
+      });
+    } catch (error: any) {
+      return next(new ErrorHandler(error?.message, 500));
     }
   }
 );
