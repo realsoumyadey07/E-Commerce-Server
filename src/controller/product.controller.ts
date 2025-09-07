@@ -89,8 +89,8 @@ export const searchProduct = CatchAsyncError(
         product_name: {
           $regex: searchKey,
           $options: "i",
-        },
-      });
+        }
+      }).populate("category_id", "category_name");
       return res.status(200).json({
         success: true,
         products,
