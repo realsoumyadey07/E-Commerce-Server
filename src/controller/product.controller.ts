@@ -89,7 +89,7 @@ export const searchProduct = CatchAsyncError(
         product_name: {
           $regex: searchKey,
           $options: "i",
-        }
+        },
       }).populate("category_id", "category_name");
       return res.status(200).json({
         success: true,
@@ -195,5 +195,54 @@ export const deleteProduct = CatchAsyncError(
       success: true,
       message: "Product successfully deleted!",
     });
+  }
+);
+
+export const userSearchProduct = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { searchKey } = req.query;
+    if (!searchKey || typeof searchKey !== "string") {
+      return next(new ErrorHandler("search key is required!", 400));
+    }
+    let mongoQuery: any = {};
+    const underMatch = searchKey.match(/under\s+(\d+)/i);
+    if (underMatch) {
+      const priceLimit = parseInt(underMatch[1], 10);
+      mongoQuery.price = { $lte: priceLimit };
+    }
+    const aboveMatch = searchKey.match(/above\s+(\d+)/i);
+    if (aboveMatch) {
+      const priceLimit = parseInt(aboveMatch[1], 10);
+      mongoQuery.price = { ...mongoQuery.price, $gte: priceLimit };
+    }
+    mongoQuery.$or = [
+      {
+        product_name: {
+          $regex: searchKey,
+          $options: "i",
+        },
+      },
+      {
+        description: {
+          $regex: searchKey,
+          $options: "i",
+        },
+      },
+    ];
+    try {
+      const products = await Product.find(mongoQuery).limit(20);
+      return res.status(200).json({
+        success: true,
+        products,
+      });
+    } catch (error: any) {
+      return next(
+        new ErrorHandler(
+          error?.message ||
+            "something went wrong while fetching user serched product products",
+          500
+        )
+      );
+    }
   }
 );

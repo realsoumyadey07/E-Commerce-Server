@@ -1,0 +1,45 @@
+import { NextFunction, Request, Response } from "express";
+import { CatchAsyncError } from "../middlewares/asyncerror.middleware";
+import ErrorHandler from "../utils/ErrorHandler";
+import { Product } from "../models/product.model";
+import { Cart } from "../models/cart.model";
+import mongoose from "mongoose";
+
+export const addToCart = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { productId } = req.body;
+    if (!productId || !mongoose.Types.ObjectId.isValid(productId))
+      return next(new ErrorHandler("invalid product id!", 400));
+    const productExists = await Product.findById(productId);
+    if (!productExists)
+      return next(new ErrorHandler("product dosn't exist", 404));
+    const cartExists = await Cart.findOne({
+      userId: req.user?._id,
+      productId,
+    });
+    if (cartExists)
+      return res.status(200).json({
+        success: false,
+        message: "cart already exists!",
+      });
+    const newCart = {
+      userId: req.user?._id,
+      productId,
+      quantity: 1,
+    };
+    try {
+      await Cart.create(newCart);
+      res.status(200).json({
+        success: true,
+        message: "product has been added to cart!",
+      });
+    } catch (error: any) {
+      return next(
+        new ErrorHandler(
+          error?.message || "something went wrong while add to cart",
+          500
+        )
+      );
+    }
+  }
+);
