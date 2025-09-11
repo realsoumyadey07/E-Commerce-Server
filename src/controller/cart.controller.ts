@@ -43,3 +43,29 @@ export const addToCart = CatchAsyncError(
     }
   }
 );
+
+export const getAllCarts = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.user?._id;
+    try {
+      const allCarts = await Cart.find({ userId }).populate(
+        "productId",
+        "product_name price product_image"
+      ).lean();
+      return res.status(200).json({
+        success: true,
+        carts: allCarts,
+        message: allCarts.length
+          ? "Carts fetched successfully"
+          : "No items in the cart",
+      });
+    } catch (error: any) {
+      return next(
+        new ErrorHandler(
+          error?.message || "something went wrong while add to cart",
+          500
+        )
+      );
+    }
+  }
+);

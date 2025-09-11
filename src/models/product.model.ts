@@ -25,6 +25,7 @@ const productSchema = new Schema(
     price: {
       type: Number,
       required: true,
+      min: [0, "Price cannot be negative"],
     },
     description: {
       type: String,
@@ -34,6 +35,7 @@ const productSchema = new Schema(
     quantity: {
       type: Number,
       required: true,
+      min: [0, "Stock cannot be negative"],
     },
     product_image: {
       type: String,
