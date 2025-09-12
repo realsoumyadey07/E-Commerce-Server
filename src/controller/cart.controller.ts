@@ -48,10 +48,9 @@ export const getAllCarts = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.user?._id;
     try {
-      const allCarts = await Cart.find({ userId }).populate(
-        "productId",
-        "product_name price product_image"
-      ).lean();
+      const allCarts = await Cart.find({ userId })
+        .populate("productId", "product_name price product_image")
+        .lean();
       return res.status(200).json({
         success: true,
         carts: allCarts,
@@ -69,3 +68,36 @@ export const getAllCarts = CatchAsyncError(
     }
   }
 );
+
+export const deleteFromCart = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { cartId } = req.body;
+
+    if (!cartId || !mongoose.Types.ObjectId.isValid(cartId)) {
+      return next(new ErrorHandler("cartId is required or invalid", 400));
+    }
+
+    try {
+      const deletedCart = await Cart.findByIdAndDelete(cartId);
+
+      if (!deletedCart) {
+        return next(new ErrorHandler("Cart item doesn't exist", 404));
+      }
+
+      return res.status(200).json({
+        success: true,
+        product: deletedCart,
+        message: "Product deleted successfully from cart",
+      });
+    } catch (error: any) {
+      return next(
+        new ErrorHandler(
+          error?.message ||
+            "Something went wrong while deleting product from cart!",
+          500
+        )
+      );
+    }
+  }
+);
+
