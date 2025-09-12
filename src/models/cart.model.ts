@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema, Types } from "mongoose";
+import mongoose, { Document, Model, Schema, Types } from "mongoose";
 
 interface ICart extends Document {
     userId: Types.ObjectId;
@@ -27,4 +27,4 @@ const cartSchema = new Schema<ICart>({
 
 cartSchema.index({ userId: 1, productId: 1 }, { unique: true });
 
-export const Cart = mongoose.models.Cart || mongoose.model<ICart>("Cart", cartSchema);
+export const Cart: Model<ICart> = mongoose.models.Cart || mongoose.model<ICart>("Cart", cartSchema);

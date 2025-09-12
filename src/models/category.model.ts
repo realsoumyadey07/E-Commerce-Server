@@ -1,4 +1,4 @@
-import mongoose, { Schema, model, InferSchemaType } from "mongoose";
+import mongoose, { Schema, model, InferSchemaType, Model } from "mongoose";
 
 const categorySchema = new Schema(
   {
@@ -26,5 +26,5 @@ const categorySchema = new Schema(
 
 export type ICategory = InferSchemaType<typeof categorySchema>;
 
-export const Category =
+export const Category: Model<ICategory> =
   mongoose.models.Category || model<ICategory>("Category", categorySchema);

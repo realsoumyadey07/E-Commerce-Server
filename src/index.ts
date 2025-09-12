@@ -9,6 +9,7 @@ import connectDb from "./utils/db";
 import categoryRouter from "./routes/category.routes";
 import productRouter from "./routes/product.routes";
 import cartRouter from "./routes/cart.routes";
+import addressRouter from "./routes/address.route";
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -38,6 +39,7 @@ app.use("/api/v1/user", userRouter);
 app.use("/api/v1/category", categoryRouter);
 app.use("/api/v1/product", productRouter);
 app.use("/api/v1/cart", cartRouter);
+app.use("/api/v1/address", addressRouter);
 
 // Works in Express 5
 app.all(/.*/, (req: Request, res: Response, next: NextFunction) => {

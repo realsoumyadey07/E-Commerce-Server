@@ -15,10 +15,10 @@ export interface IUser extends Document {
   refresh_token?: string;
   signAccessToken: () => string;
   signRefreshToken: () => string;
-  comparePassword: (enteredPassword: string)=> Promise<boolean>;
+  comparePassword: (enteredPassword: string) => Promise<boolean>;
 }
 
-const userSchema = new Schema(
+const userSchema = new Schema<IUser>(
   {
     name: {
       type: String,
