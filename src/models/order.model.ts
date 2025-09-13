@@ -47,7 +47,7 @@ const orderSchema = new Schema<IOreder>(
     },
     status: {
       type: String,
-      enum: ["pending", "paid", "shipped", "delivered", "cancelled"],
+      enum: ["pending", "shipped", "paid", "delivered", "cancelled"],
       default: "pending",
     },
     paymentMethod: {
