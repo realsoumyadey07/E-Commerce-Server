@@ -138,55 +138,69 @@ export const updateCategory = CatchAsyncError(
       return next(new ErrorHandler("category id is required!", 400));
     }
 
-    const categoryExists = await Category.findById(categoryId);
-    if (!categoryExists) {
-      return next(new ErrorHandler("category doesn't exist", 404));
-    }
+    try {
+      const categoryExists = await Category.findById(categoryId);
+      if (!categoryExists) {
+        return next(new ErrorHandler("category doesn't exist", 404));
+      }
 
-    const { category_name } = req.body;
+      const { category_name } = req.body;
 
-    // clone old images
-    let updatedImages = [...categoryExists.category_images];
+      // clone old images
+      let updatedImages = [...categoryExists.category_images];
 
-    // loop through each slot
-    const imageFields = ["image1", "image2", "image3", "image4"] as const;
+      // loop through each slot
+      const imageFields = ["image1", "image2", "image3", "image4"] as const;
 
-    for (let i = 0; i < imageFields.length; i++) {
-      const field = imageFields[i];
-      const file = (req.files as { [fieldname: string]: Express.Multer.File[] })?.[field]?.[0];
+      for (let i = 0; i < imageFields.length; i++) {
+        const field = imageFields[i];
+        const file = (
+          req.files as { [fieldname: string]: Express.Multer.File[] }
+        )?.[field]?.[0];
 
-      if (file) {
-        // delete old image if exists
-        if (updatedImages[i]?.public_id) {
-          await deleteFromCloudinary(updatedImages[i].public_id);
-        }
+        if (file) {
+          // delete old image if exists
+          if (updatedImages[i]?.public_id) {
+            await deleteFromCloudinary(updatedImages[i].public_id);
+          }
 
-        // upload new image
-        const uploadedResult = await uploadOnCloudinary(file.path);
-        if (uploadedResult?.secure_url && uploadedResult?.public_id) {
-          updatedImages[i] = {
-            url: uploadedResult.secure_url,
-            public_id: uploadedResult.public_id,
-          };
+          // upload new image
+          const uploadedResult = await uploadOnCloudinary(file.path);
+          if (uploadedResult?.secure_url && uploadedResult?.public_id) {
+            if (
+              updatedImages[i] &&
+              typeof updatedImages[i].set === "function"
+            ) {
+              updatedImages[i].set({
+                url: uploadedResult.secure_url,
+                public_id: uploadedResult.public_id,
+              });
+            } else {
+              updatedImages[i] = {
+                url: uploadedResult.secure_url,
+                public_id: uploadedResult.public_id,
+              } as any;
+            }
+          }
         }
       }
+
+      // update name if provided
+      if (category_name) {
+        categoryExists.category_name = category_name;
+      }
+
+      categoryExists.category_images.splice(0, categoryExists.category_images.length, ...updatedImages);
+
+      await categoryExists.save();
+
+      res.status(200).json({
+        success: true,
+        message: "Category updated successfully",
+        category: categoryExists,
+      });
+    } catch (error: any) {
+      return next(new ErrorHandler(error?.message, 500));
     }
-
-    // update name if provided
-    if (category_name) {
-      categoryExists.category_name = category_name;
-    }
-
-    categoryExists.category_images = updatedImages;
-
-    await categoryExists.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Category updated successfully",
-      category: categoryExists,
-    });
   }
 );
-
-
