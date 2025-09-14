@@ -14,13 +14,19 @@ import addressRouter from "./routes/address.route";
 const app = express();
 const PORT = process.env.PORT || 8000;
 
+const allowedOrigins =
+  process.env.NODE_ENV === "production"
+    ? [process.env.FRONTEND_URL!]
+    : [process.env.FRONTEND_URL_LOCAL!];
+
+
 // app configuration
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 app.use(cookieParser());
 app.use(
   cors({
-    origin: true,
+    origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true
   })
