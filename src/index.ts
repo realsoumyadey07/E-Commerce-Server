@@ -32,6 +32,11 @@ app.use(
   })
 );
 
+app.options("*", cors({
+  origin: allowedOrigins,
+  credentials: true,
+}));
+
 // demo routing
 app.get("/", (req: Request, res: Response) => {
   return res.json({
