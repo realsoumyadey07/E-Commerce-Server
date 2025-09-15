@@ -14,10 +14,10 @@ import addressRouter from "./routes/address.route";
 const app = express();
 const PORT = process.env.PORT || 8000;
 
-const allowedOrigins =
-  process.env.NODE_ENV === "production"
-    ? [process.env.FRONTEND_URL!]
-    : [process.env.FRONTEND_URL_LOCAL!];
+// const allowedOrigins =
+//   process.env.NODE_ENV === "production"
+//     ? [process.env.FRONTEND_URL!]
+//     : [process.env.FRONTEND_URL_LOCAL!];
 
 
 // app configuration
@@ -26,16 +26,11 @@ app.use(express.urlencoded({extended: true}));
 app.use(cookieParser());
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: "https://jewellery-ecommerce-client.vercel.app",
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     credentials: true
   })
 );
-
-app.options("*", cors({
-  origin: allowedOrigins,
-  credentials: true,
-}));
 
 // demo routing
 app.get("/", (req: Request, res: Response) => {
