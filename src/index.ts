@@ -14,23 +14,31 @@ import addressRouter from "./routes/address.route";
 const app = express();
 const PORT = process.env.PORT || 8000;
 
-// const allowedOrigins =
-//   process.env.NODE_ENV === "production"
-//     ? [process.env.FRONTEND_URL!]
-//     : [process.env.FRONTEND_URL_LOCAL!];
+// Allowed origins (local + deployed)
+const allowedOrigins = [
+  process.env.FRONTEND_URL_LOCAL || "http://localhost:5173",
+  process.env.FRONTEND_URL || "https://jewellery-ecommerce-client.vercel.app",
+];
 
+// ✅ Proper CORS config
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    credentials: true,
+  })
+);
 
 // app configuration
 app.use(express.json());
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(
-  cors({
-    origin: "https://jewellery-ecommerce-client.vercel.app",
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    credentials: true
-  })
-);
 
 // demo routing
 app.get("/", (req: Request, res: Response) => {
@@ -47,7 +55,7 @@ app.use("/api/v1/product", productRouter);
 app.use("/api/v1/cart", cartRouter);
 app.use("/api/v1/address", addressRouter);
 
-// Works in Express 5
+// Handle unknown routes
 app.all(/.*/, (req: Request, res: Response, next: NextFunction) => {
   const err = new Error(`Route ${req.originalUrl} is not found`) as any;
   err.statusCode = 404;
@@ -56,10 +64,12 @@ app.all(/.*/, (req: Request, res: Response, next: NextFunction) => {
 
 app.use(ErrorMiddleware);
 
-connectDb().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Server is running on: ${PORT}`);
-  });
-}).catch((err)=> {
+connectDb()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`✅ Server is running on: ${PORT}`);
+    });
+  })
+  .catch((err) => {
     console.log("❌ Db connection failed!", err);
-});
+  });
