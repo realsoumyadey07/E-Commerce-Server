@@ -54,6 +54,7 @@ interface ITokenOptions {
   httpOnly: boolean;
   sameSite: "lax" | "none" | undefined;
   secure?: boolean;
+  path: string;
 }
 
 export const userLogin = CatchAsyncError(
@@ -81,6 +82,7 @@ export const userLogin = CatchAsyncError(
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        path: "/",
         expires: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
       };
       res.cookie("access_token", access_token, cookiesOption);
@@ -145,8 +147,9 @@ export const userLogout = CatchAsyncError(
       );
       const cookiesOption: ITokenOptions = {
         httpOnly: true,
-        secure: false,
-        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        path: "/",
       };
       return res
         .status(200)

@@ -1,7 +1,7 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 
 interface IAddress extends Document {
-    userId: Schema.Types.ObjectId,
+    userId: Schema.Types.ObjectId;
     name: string;
     phoneNumber: string;
     pincode: string;
@@ -11,7 +11,7 @@ interface IAddress extends Document {
     district: string;
     state: string;
     landmark: string;
-    addressType: "home" | "work"
+    addressType: "home" | "work";
 }
 
 const addressSchema = new Schema<IAddress>({
