@@ -130,6 +130,28 @@ export const cancelOrder = CatchAsyncError(
   }
 );
 
-export const getMyOrders = CatchAsyncError(async(req: Request, res: Response, next: NextFunction)=> {
-
-});
+export const getMyOrders = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.user?._id;
+    try {
+      const orders = await Order.find({ userId })
+        .populate("products.productId", "product_name price product_image")
+        .populate(
+          "shippingAddress",
+          "name phoneNumber pincode locality area city district state landmark addressType"
+        )
+        .sort({ createdAt: -1 });
+      return res.status(200).json({
+        success: true,
+        orders,
+      });
+    } catch (error: any) {
+      return next(
+        new ErrorHandler(
+          error?.message || "something went wrong while fetching orders",
+          500
+        )
+      );
+    }
+  }
+);

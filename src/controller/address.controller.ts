@@ -74,3 +74,25 @@ export const addAddress = CatchAsyncError(
   }
 );
 
+export const getMyAddress = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.user?._id;
+    try {
+      const address = await Address.findOne({ userId });
+      if (!address) {
+        return res.status(404).json({ success: false, message: "address not found!" });
+      }
+      return res.status(200).json({
+        success: true,
+        address,
+      });
+    } catch (error: any) {
+      return next(
+        new ErrorHandler(
+          error?.message || "something went wrong while getting address",
+          500
+        )
+      );
+    }
+  }
+);
