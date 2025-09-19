@@ -11,7 +11,7 @@ export interface IOreder extends Document {
   status: "pending" | "shipped" | "delivered" | "paid" | "cancelled";
   paymentMethod: "cod" | "card" | "upi";
   paymentId?: string;
-  shippingAddress: Types.ObjectId;
+  addressId: Types.ObjectId;
 }
 
 const orderSchema = new Schema<IOreder>(
@@ -58,7 +58,7 @@ const orderSchema = new Schema<IOreder>(
     paymentId: {
       type: String,
     },
-    shippingAddress: {
+    addressId: {
       type: Schema.Types.ObjectId,
       ref: "Address",
       required: true,
