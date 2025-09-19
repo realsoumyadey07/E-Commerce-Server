@@ -10,52 +10,50 @@ export const createOrder = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.user?._id;
     const { products, addressId, paymentMethod, paymentId } = req.body;
-    if (!products || !Array.isArray(products) || products.length === 0)
+
+    if (!products || !Array.isArray(products) || products.length === 0) {
       return next(new ErrorHandler("products are required!", 400));
-    if (!addressId)
+    }
+    if (!addressId) {
       return next(new ErrorHandler("addressId is required!", 400));
+    }
+    if (!paymentMethod) {
+      return next(new ErrorHandler("payment method is required!", 400));
+    }
+
     try {
-      const validAddress = await Address.findOne({
-        _id: addressId,
-        userId,
-      });
-      if (!validAddress || validAddress.userId !== userId) {
+      const address = await Address.findOne({ _id: addressId, userId });
+      if (!address) {
         return next(new ErrorHandler("invalid addressId!", 404));
       }
-      if (!paymentMethod)
-        return next(new ErrorHandler("payment method is required!", 400));
-      const shippingAddress = await Address.findOne({
-        _id: addressId,
-        userId,
-      });
-      if (!shippingAddress)
-        return next(new ErrorHandler("Invalid or unauthorized address!", 400));
 
       let totalAmount = 0;
-      const orderProducts = [];
-      for (const item of products) {
-        const product = await Product.findById(item.productId);
-        if (!product) return next(new ErrorHandler("product not found!", 404));
-        if (product.quantity < item.quantity)
-          return next(
-            new ErrorHandler(
+
+      const orderProducts = await Promise.all(
+        products.map(async (item) => {
+          const product = await Product.findById(item.productId);
+          if (!product) throw new ErrorHandler("product not found!", 404);
+
+          if (product.quantity < item.quantity) {
+            throw new ErrorHandler(
               `Insufficient stock for ${product.product_name}`,
               400
-            )
-          );
+            );
+          }
 
-        const itemTotal = product.price * item.quantity;
-        totalAmount += itemTotal;
+          const itemTotal = product.price * item.quantity;
+          totalAmount += itemTotal;
 
-        orderProducts.push({
-          productId: product._id,
-          quantity: item.quantity,
-          price: product.price,
-        });
+          product.quantity -= item.quantity;
+          await product.save();
 
-        product.quantity -= item.quantity;
-        await product.save();
-      }
+          return {
+            productId: product._id,
+            quantity: item.quantity,
+            price: product.price,
+          };
+        })
+      );
 
       const order = await Order.create({
         userId,
@@ -63,7 +61,7 @@ export const createOrder = CatchAsyncError(
         totalAmount,
         paymentMethod,
         paymentId,
-        addressId: addressId,
+        addressId,
       });
 
       return res.status(200).json({
@@ -137,10 +135,11 @@ export const getMyOrders = CatchAsyncError(
       const orders = await Order.find({ userId })
         .populate("products.productId", "product_name price product_image")
         .populate(
-          "shippingAddress",
+          "addressId",
           "name phoneNumber pincode locality area city district state landmark addressType"
         )
         .sort({ createdAt: -1 });
+
       return res.status(200).json({
         success: true,
         orders,
