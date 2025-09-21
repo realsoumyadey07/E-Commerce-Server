@@ -11,6 +11,7 @@ import productRouter from "./routes/product.routes";
 import cartRouter from "./routes/cart.routes";
 import addressRouter from "./routes/address.route";
 import orderRouter from "./routes/order.route";
+import wishlistRouter from "./routes/wishlist.route";
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -56,6 +57,7 @@ app.use("/api/v1/product", productRouter);
 app.use("/api/v1/cart", cartRouter);
 app.use("/api/v1/address", addressRouter);
 app.use("/api/v1/order", orderRouter);
+app.use("/api/v1/wishlist", wishlistRouter);
 
 // Handle unknown routes
 app.all(/.*/, (req: Request, res: Response, next: NextFunction) => {
