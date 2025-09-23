@@ -44,17 +44,59 @@ export const addToWishlist = CatchAsyncError(
   }
 );
 
-export const getAllWishlisted = CatchAsyncError(async (req: Request, res: Response, next: NextFunction)=> {
+export const removeFromWishlist = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.user?._id;
+    const { productId } = req.body;
+    try {
+      const product = await Product.findById(productId);
+      if (!product)
+        return next(new ErrorHandler("product doesn't exists!", 404));
+      const myWishlist = await Wishlist.findOne({
+        userId,
+      });
+      if (!myWishlist)
+        return next(new ErrorHandler("you don't have any wishlist!", 400));
+      if (myWishlist.products.some((i) => i.toString() === productId))
+        myWishlist.products = myWishlist.products.filter(
+          (i) => i.toString() !== productId
+        );
+      await myWishlist.save();
+      return res.status(200).json({
+        success: true,
+        message: "item got removed from wishlist!",
+        wishlist: myWishlist,
+      });
+    } catch (error: any) {
+      return next(
+        new ErrorHandler(
+          error?.message ||
+            "something went wrong while removing from wishlist!",
+          500
+        )
+      );
+    }
+  }
+);
+
+export const getAllWishlisted = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.user?._id;
     try {
-        const myWishlists = await Wishlist.find({
-            userId
-        });
-        return res.status(200).json({
-            success: true,
-            wishlists: myWishlists[0]
-        });
+      const myWishlists = await Wishlist.find({
+        userId,
+      });
+      return res.status(200).json({
+        success: true,
+        wishlists: myWishlists[0],
+      });
     } catch (error: any) {
-        return next(new ErrorHandler(error?.message || "something went wrong while getting all wishlists!", 500));
+      return next(
+        new ErrorHandler(
+          error?.message || "something went wrong while getting all wishlists!",
+          500
+        )
+      );
     }
-});
+  }
+);

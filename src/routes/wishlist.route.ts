@@ -1,10 +1,11 @@
 import express from "express";
 import { isAuthenticated } from "../middlewares/auth.middleware";
-import { addToWishlist, getAllWishlisted } from "../controller/wishlist.controller";
+import { addToWishlist, getAllWishlisted, removeFromWishlist } from "../controller/wishlist.controller";
 
 const wishlistRouter = express.Router();
 
 wishlistRouter.post("/add-to-wishlist", isAuthenticated, addToWishlist);
 wishlistRouter.get("/get-my-wishlists", isAuthenticated, getAllWishlisted);
+wishlistRouter.delete("/remove-from-wishlist", isAuthenticated, removeFromWishlist);
 
 export default wishlistRouter;
