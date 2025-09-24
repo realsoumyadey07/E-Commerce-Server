@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.userSearchProduct = exports.deleteProduct = exports.updateProduct = exports.getProductById = exports.searchProduct = exports.getAllProducts = exports.createProduct = void 0;
+exports.getAllCategoryProducts = exports.userSearchProduct = exports.deleteProduct = exports.updateProduct = exports.getProductById = exports.searchProduct = exports.getAllProducts = exports.createProduct = void 0;
 const asyncerror_middleware_1 = require("../middlewares/asyncerror.middleware");
 const ErrorHandler_1 = __importDefault(require("../utils/ErrorHandler"));
 const cloudinary_1 = require("../utils/cloudinary");
@@ -221,5 +221,21 @@ exports.userSearchProduct = (0, asyncerror_middleware_1.CatchAsyncError)((req, r
     catch (error) {
         return next(new ErrorHandler_1.default((error === null || error === void 0 ? void 0 : error.message) ||
             "something went wrong while fetching user serched product products", 500));
+    }
+}));
+exports.getAllCategoryProducts = (0, asyncerror_middleware_1.CatchAsyncError)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { categoryId } = req.body;
+    try {
+        const products = yield product_model_1.Product.find({
+            category_id: categoryId,
+        });
+        return res.status(200).json({
+            success: true,
+            products,
+        });
+    }
+    catch (error) {
+        return next(new ErrorHandler_1.default((error === null || error === void 0 ? void 0 : error.message) ||
+            "something went wrong while getting all products from category!", 500));
     }
 }));

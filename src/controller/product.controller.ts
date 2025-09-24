@@ -246,3 +246,26 @@ export const userSearchProduct = CatchAsyncError(
     }
   }
 );
+
+export const getAllCategoryProducts = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { categoryId } = req.body;
+    try {
+      const products = await Product.find({
+        category_id: categoryId,
+      });
+      return res.status(200).json({
+        success: true,
+        products,
+      });
+    } catch (error: any) {
+      return next(
+        new ErrorHandler(
+          error?.message ||
+            "something went wrong while getting all products from category!",
+          500
+        )
+      );
+    }
+  }
+);

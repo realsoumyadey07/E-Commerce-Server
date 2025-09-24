@@ -12,6 +12,7 @@ productRouter.post("/create-product", auth_middleware_1.isAuthenticated, (0, aut
 productRouter.get("/get-all-products", product_controller_1.getAllProducts);
 productRouter.get("/search-products", product_controller_1.searchProduct);
 productRouter.get("/search", product_controller_1.userSearchProduct);
+productRouter.get("/get-category-products", product_controller_1.getAllCategoryProducts);
 productRouter.get("/product-details/:productId", product_controller_1.getProductById);
 productRouter.patch("/edit-product/:productId", auth_middleware_1.isAuthenticated, (0, auth_middleware_1.authorizeRoles)("admin"), multer_middleware_1.upload.single("product_image"), product_controller_1.updateProduct);
 productRouter.delete("/delete-product/:productId", auth_middleware_1.isAuthenticated, (0, auth_middleware_1.authorizeRoles)("admin"), product_controller_1.deleteProduct);

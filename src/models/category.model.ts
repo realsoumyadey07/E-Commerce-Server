@@ -20,6 +20,10 @@ const categorySchema = new Schema(
         },
       },
     ],
+    is_header: {
+      type: Boolean,
+      default: false
+    }
   },
   { timestamps: true }
 );

@@ -9,4 +9,5 @@ const order_controller_1 = require("../controller/order.controller");
 const orderRouter = express_1.default.Router();
 orderRouter.post("/create-order", auth_middleware_1.isAuthenticated, order_controller_1.createOrder);
 orderRouter.post("/cancel-order", auth_middleware_1.isAuthenticated, order_controller_1.cancelOrder);
+orderRouter.get("/my-orders", auth_middleware_1.isAuthenticated, order_controller_1.getMyOrders);
 exports.default = orderRouter;

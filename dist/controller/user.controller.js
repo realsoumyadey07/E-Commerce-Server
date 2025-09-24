@@ -65,6 +65,7 @@ exports.userLogin = (0, asyncerror_middleware_1.CatchAsyncError)((req, res, next
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+            path: "/",
             expires: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
         };
         res.cookie("access_token", access_token, cookiesOption);
@@ -113,8 +114,9 @@ exports.userLogout = (0, asyncerror_middleware_1.CatchAsyncError)((req, res, nex
         }, { new: true });
         const cookiesOption = {
             httpOnly: true,
-            secure: false,
-            sameSite: "lax",
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+            path: "/",
         };
         return res
             .status(200)
