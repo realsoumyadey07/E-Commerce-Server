@@ -224,7 +224,7 @@ exports.userSearchProduct = (0, asyncerror_middleware_1.CatchAsyncError)((req, r
     }
 }));
 exports.getAllCategoryProducts = (0, asyncerror_middleware_1.CatchAsyncError)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const { categoryId } = req.body;
+    const { categoryId } = req.query;
     try {
         const products = yield product_model_1.Product.find({
             category_id: categoryId,
