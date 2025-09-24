@@ -33,30 +33,25 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Category = void 0;
+exports.Wishlist = void 0;
 const mongoose_1 = __importStar(require("mongoose"));
-const categorySchema = new mongoose_1.Schema({
-    category_name: {
-        type: String,
+const wishlistSchema = new mongoose_1.Schema({
+    userId: {
+        type: mongoose_1.Types.ObjectId,
+        ref: "User",
         required: true,
-        trim: true,
-        unique: true,
     },
-    category_images: [
+    products: [
         {
-            url: {
-                type: String,
-                required: true,
-            },
-            public_id: {
-                type: String,
-                required: true,
-            },
+            type: mongoose_1.Types.ObjectId,
+            ref: "Product",
+            required: true,
         },
     ],
-    is_header: {
-        type: Boolean,
-        default: false
-    }
 }, { timestamps: true });
-exports.Category = mongoose_1.default.models.Category || (0, mongoose_1.model)("Category", categorySchema);
+wishlistSchema.index({
+    user: 1
+}, {
+    unique: true
+});
+exports.Wishlist = mongoose_1.default.models.Wishlist || mongoose_1.default.model("Wishlist", wishlistSchema);

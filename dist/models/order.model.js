@@ -78,7 +78,7 @@ const orderSchema = new mongoose_1.Schema({
     paymentId: {
         type: String,
     },
-    shippingAddress: {
+    addressId: {
         type: mongoose_1.Schema.Types.ObjectId,
         ref: "Address",
         required: true,

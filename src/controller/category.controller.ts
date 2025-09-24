@@ -4,10 +4,10 @@ import ErrorHandler from "../utils/ErrorHandler";
 import { deleteFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary";
 import { Category } from "../models/category.model";
 import mongoose from "mongoose";
-import { url } from "inspector";
 
 interface ICreateCategory {
   category_name: string;
+  isHeader?: boolean;
 }
 
 export const createCategory = CatchAsyncError(
@@ -48,6 +48,7 @@ export const createCategory = CatchAsyncError(
     try {
       const newCategory = await Category.create({
         category_name,
+        is_header: req.body.isHeader ?? false,
         category_images: categoryImages,
       });
 
@@ -190,7 +191,11 @@ export const updateCategory = CatchAsyncError(
         categoryExists.category_name = category_name;
       }
 
-      categoryExists.category_images.splice(0, categoryExists.category_images.length, ...updatedImages);
+      categoryExists.category_images.splice(
+        0,
+        categoryExists.category_images.length,
+        ...updatedImages
+      );
 
       await categoryExists.save();
 

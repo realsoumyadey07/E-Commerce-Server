@@ -19,6 +19,7 @@ const cloudinary_1 = require("../utils/cloudinary");
 const category_model_1 = require("../models/category.model");
 const mongoose_1 = __importDefault(require("mongoose"));
 exports.createCategory = (0, asyncerror_middleware_1.CatchAsyncError)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     const { category_name } = req.body;
     if (!category_name) {
         return next(new ErrorHandler_1.default("Please provide category name", 400));
@@ -45,6 +46,7 @@ exports.createCategory = (0, asyncerror_middleware_1.CatchAsyncError)((req, res,
     try {
         const newCategory = yield category_model_1.Category.create({
             category_name,
+            is_header: (_a = req.body.isHeader) !== null && _a !== void 0 ? _a : false,
             category_images: categoryImages,
         });
         return res.status(201).json({

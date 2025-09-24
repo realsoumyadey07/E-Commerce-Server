@@ -23,51 +23,45 @@ exports.createOrder = (0, asyncerror_middleware_1.CatchAsyncError)((req, res, ne
     var _a;
     const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     const { products, addressId, paymentMethod, paymentId } = req.body;
-    if (!products || !Array.isArray(products) || products.length === 0)
+    if (!products || !Array.isArray(products) || products.length === 0) {
         return next(new ErrorHandler_1.default("products are required!", 400));
-    if (!addressId)
+    }
+    if (!addressId) {
         return next(new ErrorHandler_1.default("addressId is required!", 400));
+    }
+    if (!paymentMethod) {
+        return next(new ErrorHandler_1.default("payment method is required!", 400));
+    }
     try {
-        const validAddress = yield address_model_1.Address.findOne({
-            _id: addressId,
-            userId,
-        });
-        if (!validAddress || validAddress.userId !== userId) {
+        const address = yield address_model_1.Address.findOne({ _id: addressId, userId });
+        if (!address) {
             return next(new ErrorHandler_1.default("invalid addressId!", 404));
         }
-        if (!paymentMethod)
-            return next(new ErrorHandler_1.default("payment method is required!", 400));
-        const shippingAddress = yield address_model_1.Address.findOne({
-            _id: addressId,
-            userId,
-        });
-        if (!shippingAddress)
-            return next(new ErrorHandler_1.default("Invalid or unauthorized address!", 400));
         let totalAmount = 0;
-        const orderProducts = [];
-        for (const item of products) {
+        const orderProducts = yield Promise.all(products.map((item) => __awaiter(void 0, void 0, void 0, function* () {
             const product = yield product_model_1.Product.findById(item.productId);
             if (!product)
-                return next(new ErrorHandler_1.default("product not found!", 404));
-            if (product.quantity < item.quantity)
-                return next(new ErrorHandler_1.default(`Insufficient stock for ${product.product_name}`, 400));
+                throw new ErrorHandler_1.default("product not found!", 404);
+            if (product.quantity < item.quantity) {
+                throw new ErrorHandler_1.default(`Insufficient stock for ${product.product_name}`, 400);
+            }
             const itemTotal = product.price * item.quantity;
             totalAmount += itemTotal;
-            orderProducts.push({
+            product.quantity -= item.quantity;
+            yield product.save();
+            return {
                 productId: product._id,
                 quantity: item.quantity,
                 price: product.price,
-            });
-            product.quantity -= item.quantity;
-            yield product.save();
-        }
+            };
+        })));
         const order = yield order_model_1.Order.create({
             userId,
             products: orderProducts,
             totalAmount,
             paymentMethod,
             paymentId,
-            addressId: addressId,
+            addressId,
         });
         return res.status(200).json({
             success: true,
@@ -122,4 +116,19 @@ exports.cancelOrder = (0, asyncerror_middleware_1.CatchAsyncError)((req, res, ne
     }
 }));
 exports.getMyOrders = (0, asyncerror_middleware_1.CatchAsyncError)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
+    try {
+        const orders = yield order_model_1.Order.find({ userId })
+            .populate("products.productId", "product_name price product_image")
+            .populate("addressId", "name phoneNumber pincode locality area city district state landmark addressType")
+            .sort({ createdAt: -1 });
+        return res.status(200).json({
+            success: true,
+            orders,
+        });
+    }
+    catch (error) {
+        return next(new ErrorHandler_1.default((error === null || error === void 0 ? void 0 : error.message) || "something went wrong while fetching orders", 500));
+    }
 }));
