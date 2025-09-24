@@ -249,7 +249,7 @@ export const userSearchProduct = CatchAsyncError(
 
 export const getAllCategoryProducts = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { categoryId } = req.body;
+    const { categoryId } = req.query;
     try {
       const products = await Product.find({
         category_id: categoryId,
