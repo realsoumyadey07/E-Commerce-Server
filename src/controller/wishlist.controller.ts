@@ -85,7 +85,7 @@ export const getAllWishlisted = CatchAsyncError(
     try {
       const myWishlists = await Wishlist.find({
         userId,
-      });
+      }).populate("products", "product_name price product_image");
       return res.status(200).json({
         success: true,
         wishlists: myWishlists[0],
