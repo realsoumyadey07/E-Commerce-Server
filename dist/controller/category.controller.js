@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateCategory = exports.getCategoryById = exports.searchCategory = exports.getAllCategories = exports.createCategory = void 0;
+exports.getAllHeaderCategories = exports.updateCategory = exports.getCategoryById = exports.searchCategory = exports.getAllCategories = exports.createCategory = void 0;
 const asyncerror_middleware_1 = require("../middlewares/asyncerror.middleware");
 const ErrorHandler_1 = __importDefault(require("../utils/ErrorHandler"));
 const cloudinary_1 = require("../utils/cloudinary");
@@ -169,6 +169,20 @@ exports.updateCategory = (0, asyncerror_middleware_1.CatchAsyncError)((req, res,
             success: true,
             message: "Category updated successfully",
             category: categoryExists,
+        });
+    }
+    catch (error) {
+        return next(new ErrorHandler_1.default(error === null || error === void 0 ? void 0 : error.message, 500));
+    }
+}));
+exports.getAllHeaderCategories = (0, asyncerror_middleware_1.CatchAsyncError)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const categories = yield category_model_1.Category.find({
+            is_header: true
+        });
+        return res.status(200).json({
+            success: true,
+            categories
         });
     }
     catch (error) {
