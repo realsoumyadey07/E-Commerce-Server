@@ -56,7 +56,7 @@ exports.getAllCarts = (0, asyncerror_middleware_1.CatchAsyncError)((req, res, ne
     const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     try {
         const allCarts = yield cart_model_1.Cart.find({ userId })
-            .populate("productId", "product_name price product_image")
+            .populate("productId", "product_name price images")
             .lean();
         return res.status(200).json({
             success: true,

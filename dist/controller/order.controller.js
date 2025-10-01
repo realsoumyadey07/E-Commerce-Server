@@ -120,7 +120,7 @@ exports.getMyOrders = (0, asyncerror_middleware_1.CatchAsyncError)((req, res, ne
     const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     try {
         const orders = yield order_model_1.Order.find({ userId })
-            .populate("products.productId", "product_name price product_image")
+            .populate("products.productId", "product_name price images")
             .populate("addressId", "name phoneNumber pincode locality area city district state landmark addressType")
             .sort({ createdAt: -1 });
         return res.status(200).json({

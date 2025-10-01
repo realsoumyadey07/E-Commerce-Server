@@ -61,14 +61,18 @@ const productSchema = new mongoose_1.Schema({
         required: true,
         min: [0, "Stock cannot be negative"],
     },
-    product_image: {
-        type: String,
-        required: true,
-    },
-    image_public_id: {
-        type: String,
-        required: true,
-    },
+    images: [
+        {
+            url: {
+                type: String,
+                required: true
+            },
+            public_id: {
+                type: String,
+                required: true
+            }
+        }
+    ]
 }, { timestamps: true });
 productSchema.index({
     product_name: "text",

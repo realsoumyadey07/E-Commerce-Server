@@ -21,9 +21,9 @@ export const createProduct = CatchAsyncError(
     if (!product_name || !category_id || !price || !description || !quantity) {
       return next(new ErrorHandler("All fields are required!", 400));
     }
-    if (!req.file) {
-      return next(new ErrorHandler("Product image is required!", 400));
-    }
+    // if (!req.files) {
+    //   return next(new ErrorHandler("Product image is required!", 400));
+    // }
     const parsedPrice = Number(price);
     if (isNaN(parsedPrice)) {
       return next(new ErrorHandler("Price must be a number!", 400));
@@ -32,10 +32,17 @@ export const createProduct = CatchAsyncError(
     if (isNaN(parsedQuantity)) {
       return next(new ErrorHandler("Quantity must be a number!", 400));
     }
+    if(!req.files || (req.files as Express.Multer.File[]).length < 4) {
+      return next(new ErrorHandler("At least 4 images are required!", 400));
+    }
+    const files = req.files as Express.Multer.File[];
     // upload to cloudinary
-    const cloudinaryRes = await uploadOnCloudinary(req.file.path);
-    if (!cloudinaryRes) {
-      return next(new ErrorHandler("Image upload failed", 500));
+    const uploadResults = await Promise.all(
+      files.map((file)=> uploadOnCloudinary(file.path))
+    );
+
+    if(uploadResults.some((result)=> result === null)) {
+      return next(new ErrorHandler("One or more images failed to upload", 500));
     }
     try {
       const product = {
@@ -44,8 +51,10 @@ export const createProduct = CatchAsyncError(
         price,
         description,
         quantity,
-        product_image: cloudinaryRes.secure_url,
-        image_public_id: cloudinaryRes.public_id,
+        images: uploadResults.map(result=> ({
+          url: result!.secure_url,
+          public_id: result!.public_id
+        }))
       };
       const newProduct = await Product.create(product);
       return res.status(200).json({
@@ -139,16 +148,35 @@ export const updateProduct = CatchAsyncError(
       if (req.body.description) product.description = req.body.description;
       if (req.body.quantity) product.quantity = req.body.quantity;
 
-      if (req.file) {
-        if (product.image_public_id) {
-          await deleteFromCloudinary(product.image_public_id);
-        }
-        const cloudinaryRes = await uploadOnCloudinary(req.file.path);
-        if (!cloudinaryRes)
-          return next(new ErrorHandler("Image upload failed!", 500));
+      const updatedImages = [ ...product.images ];
 
-        product.product_image = cloudinaryRes.secure_url;
-        product.image_public_id = cloudinaryRes.public_id;
+      const imageFields = [ 'image1', 'image2', 'image3', 'image4' ];
+            let imageUpdated = false;
+
+      for(let i=0; i< imageFields.length;i++){
+        const field = imageFields[i];
+        const file = (
+          req.files as { [fieldname: string] : Express.Multer.File[]}
+        )?.[field]?.[0];
+
+        if(file) {
+          imageUpdated = true;
+          if(updatedImages[i]?.public_id){
+            await deleteFromCloudinary(updatedImages[i].public_id);
+          }
+
+          // upload new image
+          const uploadedResult = await uploadOnCloudinary(file.path);
+          if(uploadedResult){
+            updatedImages[i] = {
+              url: uploadedResult.secure_url,
+              public_id: uploadedResult.public_id
+            }
+          }
+        }
+      }
+      if(imageUpdated){
+        product.images = updatedImages;
       }
       // Save and return
       const updatedProduct = await product.save();
@@ -177,19 +205,22 @@ export const deleteProduct = CatchAsyncError(
     }
 
     // deleting image from cloudinary
-    const productExists = await Product.findByIdAndDelete(productId);
+    const productExists = await Product.findById(productId);
     if (!productExists)
       return next(new ErrorHandler("Product doesn't exist!", 404));
-
-    if (productExists.image_public_id) {
-      try {
-        await deleteFromCloudinary(productExists.image_public_id);
-      } catch (error: any) {
-        return next(
+    for(const image of productExists.images) {
+      if(image.public_id) {
+        try {
+          await deleteFromCloudinary(image.public_id);
+        } catch (error: any) {
+          return next(
           new ErrorHandler("error while deleting image from cloudinary", 500)
         );
+        }
       }
     }
+
+    await productExists.deleteOne();
 
     return res.status(200).json({
       success: true,

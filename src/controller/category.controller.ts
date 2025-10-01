@@ -152,6 +152,7 @@ export const updateCategory = CatchAsyncError(
 
       // loop through each slot
       const imageFields = ["image1", "image2", "image3", "image4"] as const;
+      let imageUpdated = false;
 
       for (let i = 0; i < imageFields.length; i++) {
         const field = imageFields[i];
@@ -160,6 +161,7 @@ export const updateCategory = CatchAsyncError(
         )?.[field]?.[0];
 
         if (file) {
+          imageUpdated = true;
           // delete old image if exists
           if (updatedImages[i]?.public_id) {
             await deleteFromCloudinary(updatedImages[i].public_id);
@@ -191,11 +193,14 @@ export const updateCategory = CatchAsyncError(
         categoryExists.category_name = category_name;
       }
 
-      categoryExists.category_images.splice(
-        0,
-        categoryExists.category_images.length,
-        ...updatedImages
-      );
+      // Only update images if any were changed
+      if (imageUpdated) {
+        categoryExists.category_images.splice(
+          0,
+          categoryExists.category_images.length,
+          ...updatedImages
+        );
+      }
 
       await categoryExists.save();
 
