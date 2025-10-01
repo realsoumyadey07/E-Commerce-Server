@@ -10,7 +10,6 @@ const category_controller_1 = require("../controller/category.controller");
 const categoryRouter = express_1.default.Router();
 categoryRouter.post("/create-category", auth_middleware_1.isAuthenticated, (0, auth_middleware_1.authorizeRoles)("admin"), multer_middleware_1.upload.array("category_images", 4), category_controller_1.createCategory);
 categoryRouter.get("/get-all-categories", category_controller_1.getAllCategories);
-categoryRouter.get("/get-all-header-categories", category_controller_1.getAllHeaderCategories);
 categoryRouter.get("/get-categoryById/:categoryId", category_controller_1.getCategoryById);
 categoryRouter.get("/search-categories", auth_middleware_1.isAuthenticated, (0, auth_middleware_1.authorizeRoles)("admin"), category_controller_1.searchCategory);
 categoryRouter.patch("/edit-category/:categoryId", auth_middleware_1.isAuthenticated, (0, auth_middleware_1.authorizeRoles)("admin"), multer_middleware_1.upload.fields([

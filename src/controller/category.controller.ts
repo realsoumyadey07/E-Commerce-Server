@@ -214,19 +214,3 @@ export const updateCategory = CatchAsyncError(
     }
   }
 );
-
-export const getAllHeaderCategories = CatchAsyncError(
-  async (req: Request, res: Response, next: NextFunction)=> {
-    try {
-      const categories = await Category.find({
-        is_header: true
-      });
-      return res.status(200).json({
-        success: true,
-        categories
-      });
-    } catch (error: any) {
-      return next(new ErrorHandler(error?.message, 500));
-    }
-  }
-)
