@@ -84,7 +84,7 @@ exports.getAllWishlisted = (0, asyncerror_middleware_1.CatchAsyncError)((req, re
     try {
         const myWishlists = yield wishlist_model_1.Wishlist.find({
             userId,
-        }).populate("products", "product_name price product_image");
+        }).populate("products", "product_name price images");
         return res.status(200).json({
             success: true,
             wishlists: myWishlists[0],

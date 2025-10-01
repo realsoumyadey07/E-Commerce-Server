@@ -24,9 +24,9 @@ exports.createProduct = (0, asyncerror_middleware_1.CatchAsyncError)((req, res, 
     if (!product_name || !category_id || !price || !description || !quantity) {
         return next(new ErrorHandler_1.default("All fields are required!", 400));
     }
-    if (!req.file) {
-        return next(new ErrorHandler_1.default("Product image is required!", 400));
-    }
+    // if (!req.files) {
+    //   return next(new ErrorHandler("Product image is required!", 400));
+    // }
     const parsedPrice = Number(price);
     if (isNaN(parsedPrice)) {
         return next(new ErrorHandler_1.default("Price must be a number!", 400));
@@ -35,10 +35,14 @@ exports.createProduct = (0, asyncerror_middleware_1.CatchAsyncError)((req, res, 
     if (isNaN(parsedQuantity)) {
         return next(new ErrorHandler_1.default("Quantity must be a number!", 400));
     }
+    if (!req.files || req.files.length < 4) {
+        return next(new ErrorHandler_1.default("At least 4 images are required!", 400));
+    }
+    const files = req.files;
     // upload to cloudinary
-    const cloudinaryRes = yield (0, cloudinary_1.uploadOnCloudinary)(req.file.path);
-    if (!cloudinaryRes) {
-        return next(new ErrorHandler_1.default("Image upload failed", 500));
+    const uploadResults = yield Promise.all(files.map((file) => (0, cloudinary_1.uploadOnCloudinary)(file.path)));
+    if (uploadResults.some((result) => result === null)) {
+        return next(new ErrorHandler_1.default("One or more images failed to upload", 500));
     }
     try {
         const product = {
@@ -47,8 +51,10 @@ exports.createProduct = (0, asyncerror_middleware_1.CatchAsyncError)((req, res, 
             price,
             description,
             quantity,
-            product_image: cloudinaryRes.secure_url,
-            image_public_id: cloudinaryRes.public_id,
+            images: uploadResults.map(result => ({
+                url: result.secure_url,
+                public_id: result.public_id
+            }))
         };
         const newProduct = yield product_model_1.Product.create(product);
         return res.status(200).json({
@@ -115,6 +121,7 @@ exports.getProductById = (0, asyncerror_middleware_1.CatchAsyncError)((req, res,
     }
 }));
 exports.updateProduct = (0, asyncerror_middleware_1.CatchAsyncError)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b, _c;
     try {
         const { productId } = req.params;
         if (!productId)
@@ -134,15 +141,29 @@ exports.updateProduct = (0, asyncerror_middleware_1.CatchAsyncError)((req, res, 
             product.description = req.body.description;
         if (req.body.quantity)
             product.quantity = req.body.quantity;
-        if (req.file) {
-            if (product.image_public_id) {
-                yield (0, cloudinary_1.deleteFromCloudinary)(product.image_public_id);
+        const updatedImages = [...product.images];
+        const imageFields = ['image1', 'image2', 'image3', 'image4'];
+        let imageUpdated = false;
+        for (let i = 0; i < imageFields.length; i++) {
+            const field = imageFields[i];
+            const file = (_b = (_a = req.files) === null || _a === void 0 ? void 0 : _a[field]) === null || _b === void 0 ? void 0 : _b[0];
+            if (file) {
+                imageUpdated = true;
+                if ((_c = updatedImages[i]) === null || _c === void 0 ? void 0 : _c.public_id) {
+                    yield (0, cloudinary_1.deleteFromCloudinary)(updatedImages[i].public_id);
+                }
+                // upload new image
+                const uploadedResult = yield (0, cloudinary_1.uploadOnCloudinary)(file.path);
+                if (uploadedResult) {
+                    updatedImages[i] = {
+                        url: uploadedResult.secure_url,
+                        public_id: uploadedResult.public_id
+                    };
+                }
             }
-            const cloudinaryRes = yield (0, cloudinary_1.uploadOnCloudinary)(req.file.path);
-            if (!cloudinaryRes)
-                return next(new ErrorHandler_1.default("Image upload failed!", 500));
-            product.product_image = cloudinaryRes.secure_url;
-            product.image_public_id = cloudinaryRes.public_id;
+        }
+        if (imageUpdated) {
+            product.images = updatedImages;
         }
         // Save and return
         const updatedProduct = yield product.save();
@@ -165,17 +186,20 @@ exports.deleteProduct = (0, asyncerror_middleware_1.CatchAsyncError)((req, res, 
         return next(new ErrorHandler_1.default("Invalid product id format!", 400));
     }
     // deleting image from cloudinary
-    const productExists = yield product_model_1.Product.findByIdAndDelete(productId);
+    const productExists = yield product_model_1.Product.findById(productId);
     if (!productExists)
         return next(new ErrorHandler_1.default("Product doesn't exist!", 404));
-    if (productExists.image_public_id) {
-        try {
-            yield (0, cloudinary_1.deleteFromCloudinary)(productExists.image_public_id);
-        }
-        catch (error) {
-            return next(new ErrorHandler_1.default("error while deleting image from cloudinary", 500));
+    for (const image of productExists.images) {
+        if (image.public_id) {
+            try {
+                yield (0, cloudinary_1.deleteFromCloudinary)(image.public_id);
+            }
+            catch (error) {
+                return next(new ErrorHandler_1.default("error while deleting image from cloudinary", 500));
+            }
         }
     }
+    yield productExists.deleteOne();
     return res.status(200).json({
         success: true,
         message: "Product successfully deleted!",

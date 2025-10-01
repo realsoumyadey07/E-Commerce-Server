@@ -1,4 +1,4 @@
-import mongoose, { Model, Schema, Types } from "mongoose";
+import mongoose, { Document, Model, Schema, Types } from "mongoose";
 
 export interface IProduct extends Document {
   product_name: string;
@@ -6,8 +6,7 @@ export interface IProduct extends Document {
   price: number;
   description: string;
   quantity: number;
-  product_image: string;
-  image_public_id: string;
+  images: { url: string, public_id: string }[]
 }
 
 const productSchema = new Schema(
@@ -37,14 +36,18 @@ const productSchema = new Schema(
       required: true,
       min: [0, "Stock cannot be negative"],
     },
-    product_image: {
-      type: String,
-      required: true,
-    },
-    image_public_id: {
-      type: String,
-      required: true,
-    },
+    images: [
+      {
+        url: {
+          type: String,
+          required: true
+        },
+        public_id: {
+          type: String,
+          required: true
+        }
+      }
+    ]
   },
   { timestamps: true }
 );

@@ -127,10 +127,12 @@ exports.updateCategory = (0, asyncerror_middleware_1.CatchAsyncError)((req, res,
         let updatedImages = [...categoryExists.category_images];
         // loop through each slot
         const imageFields = ["image1", "image2", "image3", "image4"];
+        let imageUpdated = false;
         for (let i = 0; i < imageFields.length; i++) {
             const field = imageFields[i];
             const file = (_b = (_a = req.files) === null || _a === void 0 ? void 0 : _a[field]) === null || _b === void 0 ? void 0 : _b[0];
             if (file) {
+                imageUpdated = true;
                 // delete old image if exists
                 if ((_c = updatedImages[i]) === null || _c === void 0 ? void 0 : _c.public_id) {
                     yield (0, cloudinary_1.deleteFromCloudinary)(updatedImages[i].public_id);
@@ -158,7 +160,10 @@ exports.updateCategory = (0, asyncerror_middleware_1.CatchAsyncError)((req, res,
         if (category_name) {
             categoryExists.category_name = category_name;
         }
-        categoryExists.category_images.splice(0, categoryExists.category_images.length, ...updatedImages);
+        // Only update images if any were changed
+        if (imageUpdated) {
+            categoryExists.category_images.splice(0, categoryExists.category_images.length, ...updatedImages);
+        }
         yield categoryExists.save();
         res.status(200).json({
             success: true,

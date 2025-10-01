@@ -12,7 +12,7 @@ productRouter.post(
   "/create-product",
   isAuthenticated,
   authorizeRoles("admin"),
-  upload.single("product_image"),
+  upload.array("images", 4),
   createProduct
 );
 productRouter.get("/get-all-products", getAllProducts);

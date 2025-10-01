@@ -49,7 +49,7 @@ export const getAllCarts = CatchAsyncError(
     const userId = req.user?._id;
     try {
       const allCarts = await Cart.find({ userId })
-        .populate("productId", "product_name price product_image")
+        .populate("productId", "product_name price images")
         .lean();
       return res.status(200).json({
         success: true,
