@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMyOrders = exports.cancelOrder = exports.createOrder = void 0;
+exports.getAllOrders = exports.getMyOrders = exports.cancelOrder = exports.createOrder = void 0;
 const asyncerror_middleware_1 = require("../middlewares/asyncerror.middleware");
 const ErrorHandler_1 = __importDefault(require("../utils/ErrorHandler"));
 const address_model_1 = require("../models/address.model");
@@ -130,5 +130,18 @@ exports.getMyOrders = (0, asyncerror_middleware_1.CatchAsyncError)((req, res, ne
     }
     catch (error) {
         return next(new ErrorHandler_1.default((error === null || error === void 0 ? void 0 : error.message) || "something went wrong while fetching orders", 500));
+    }
+}));
+// for admin
+exports.getAllOrders = (0, asyncerror_middleware_1.CatchAsyncError)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const orders = yield order_model_1.Order.find().populate("userId", "name").populate("products.productId", "product_name price images").populate("addressId", "name phoneNumber pincode locality area city district state landmark addressType").sort({ createdAt: -1 });
+        return res.status(200).json({
+            success: true,
+            orders,
+        });
+    }
+    catch (error) {
+        return next(new ErrorHandler_1.default((error === null || error === void 0 ? void 0 : error.message) || "something went wrong while fetching all orders", 500));
     }
 }));

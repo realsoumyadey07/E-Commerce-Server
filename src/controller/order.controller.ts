@@ -154,3 +154,16 @@ export const getMyOrders = CatchAsyncError(
     }
   }
 );
+
+// for admin
+export const getAllOrders = CatchAsyncError(async (req: Request, res: Response, next: NextFunction)=> {
+  try {
+    const orders = await Order.find().populate("userId", "name").populate("products.productId", "product_name price images").populate("addressId", "name phoneNumber pincode locality area city district state landmark addressType").sort({ createdAt: -1 });
+    return res.status(200).json({
+      success: true,
+      orders,
+    });
+  } catch (error: any) {
+    return next(new ErrorHandler(error?.message || "something went wrong while fetching all orders", 500));
+  }
+});
