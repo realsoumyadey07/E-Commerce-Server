@@ -136,7 +136,7 @@ const generateAccessAndRefreshToken = async (
 export const userLogout = CatchAsyncError(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await User.findByIdAndUpdate(
+      const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
           $unset: {
@@ -157,6 +157,7 @@ export const userLogout = CatchAsyncError(
         .clearCookie("refresh_token", cookiesOption)
         .json({
           success: true,
+          user,
           message: "User logout successfully!",
         });
     } catch (error: any) {

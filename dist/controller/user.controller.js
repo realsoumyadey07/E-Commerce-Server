@@ -107,7 +107,7 @@ const generateAccessAndRefreshToken = (userId) => __awaiter(void 0, void 0, void
 exports.userLogout = (0, asyncerror_middleware_1.CatchAsyncError)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
-        yield user_model_1.User.findByIdAndUpdate((_a = req.user) === null || _a === void 0 ? void 0 : _a._id, {
+        const user = yield user_model_1.User.findByIdAndUpdate((_a = req.user) === null || _a === void 0 ? void 0 : _a._id, {
             $unset: {
                 refresh_token: 1,
             },
@@ -124,6 +124,7 @@ exports.userLogout = (0, asyncerror_middleware_1.CatchAsyncError)((req, res, nex
             .clearCookie("refresh_token", cookiesOption)
             .json({
             success: true,
+            user,
             message: "User logout successfully!",
         });
     }
