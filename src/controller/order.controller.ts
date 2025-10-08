@@ -155,15 +155,58 @@ export const getMyOrders = CatchAsyncError(
   }
 );
 
-// for admin
-export const getAllOrders = CatchAsyncError(async (req: Request, res: Response, next: NextFunction)=> {
-  try {
-    const orders = await Order.find().populate("userId", "name").populate("products.productId", "product_name price images").populate("addressId", "name phoneNumber pincode locality area city district state landmark addressType").sort({ createdAt: -1 });
-    return res.status(200).json({
-      success: true,
-      orders,
-    });
-  } catch (error: any) {
-    return next(new ErrorHandler(error?.message || "something went wrong while fetching all orders", 500));
+export const getOrderDetails = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { orderId } = req.params;
+      if (!orderId) return next(new ErrorHandler("order id is required!", 400));
+      const order = await Order.findById(orderId)
+        .populate("userId", "name email role")
+        .populate("products.productId", "product_name description price images")
+        .populate(
+          "addressId",
+          "name phoneNumber pincode locality area city district state landmark addressType"
+        );
+      if (!order) return next(new ErrorHandler("order not found!", 404));
+      return res.status(200).json({
+        success: true,
+        orderDetails: order,
+      });
+    } catch (error: any) {
+      return next(
+        new ErrorHandler(
+          error.message ||
+            "something went wrong while getting an order details!",
+          500
+        )
+      );
+    }
   }
-});
+);
+
+// for admin
+export const getAllOrders = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const orders = await Order.find()
+        .populate("userId", "name")
+        .populate("products.productId", "product_name price images")
+        .populate(
+          "addressId",
+          "name phoneNumber pincode locality area city district state landmark addressType"
+        )
+        .sort({ createdAt: -1 });
+      return res.status(200).json({
+        success: true,
+        orders,
+      });
+    } catch (error: any) {
+      return next(
+        new ErrorHandler(
+          error?.message || "something went wrong while fetching all orders",
+          500
+        )
+      );
+    }
+  }
+);
