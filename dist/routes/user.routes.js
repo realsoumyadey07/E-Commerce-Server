@@ -11,4 +11,6 @@ userRouter.post("/user-registration", user_controller_1.userRegistration);
 userRouter.post("/user-login", user_controller_1.userLogin);
 userRouter.get("/user-logout", auth_middleware_1.isAuthenticated, user_controller_1.userLogout);
 userRouter.get("/user-profile", auth_middleware_1.isAuthenticated, user_controller_1.userProfile);
+// for admin
+userRouter.get("/get-user/:userId", auth_middleware_1.isAuthenticated, (0, auth_middleware_1.authorizeRoles)("admin"), user_controller_1.getUserProfileById);
 exports.default = userRouter;

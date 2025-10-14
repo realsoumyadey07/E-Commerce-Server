@@ -2,6 +2,8 @@ import { NextFunction, Request, Response } from "express";
 import { CatchAsyncError } from "../middlewares/asyncerror.middleware";
 import ErrorHandler from "../utils/ErrorHandler";
 import { User } from "../models/user.model";
+import { Address } from "../models/address.model";
+import { Order } from "../models/order.model";
 
 interface IRegistrationBody {
   name: string;
@@ -166,16 +168,63 @@ export const userLogout = CatchAsyncError(
   }
 );
 
-export const userProfile = CatchAsyncError(async(req: Request, res: Response, next: NextFunction)=> {
-  try {
-    const userId = req.user?._id;
-    const user = await User.findById(userId).select("-password -refresh_token");
-    if(!user) return next(new ErrorHandler("User doesn't exists!", 404));
-    return res.status(200).json({
-      success: true,
-      user
-    });
-  } catch (error: any) {
-    return next(new ErrorHandler(error.message, 500));
+export const userProfile = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user?._id;
+      const user = await User.findById(userId).select(
+        "-password -refresh_token"
+      );
+      if (!user) return next(new ErrorHandler("User doesn't exists!", 404));
+      return res.status(200).json({
+        success: true,
+        user,
+      });
+    } catch (error: any) {
+      return next(new ErrorHandler(error.message, 500));
+    }
   }
-});
+);
+
+// for admin
+export const getUserProfileById = CatchAsyncError(
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { userId } = req.params;
+      if (!userId) return next(new ErrorHandler("user id is required!", 400));
+      const user = await User.findById(userId).lean();
+      if (!user) return next(new ErrorHandler("user not found!", 404));
+
+      const userAddress = await Address.findOne({
+        userId,
+      }).lean();
+      const userOrders = await Order.find({
+        userId,
+      })
+        .populate(
+          "products.productId",
+          "product_name price description quantity images"
+        )
+        .select("-userId -addressId")
+        .lean();
+
+      const newUser = {
+        ...user,
+        address: userAddress || null,
+        orders: userOrders || null,
+      };
+
+      return res.status(200).json({
+        success: true,
+        user: newUser,
+      });
+    } catch (error: any) {
+      return next(
+        new ErrorHandler(
+          error?.message || "something went wrong while getting user by id!",
+          500
+        )
+      );
+    }
+  }
+);

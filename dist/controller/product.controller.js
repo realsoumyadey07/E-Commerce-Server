@@ -108,7 +108,7 @@ exports.getProductById = (0, asyncerror_middleware_1.CatchAsyncError)((req, res,
         if (!mongoose_1.default.Types.ObjectId.isValid(productId)) {
             return next(new ErrorHandler_1.default("Invalid product id format!", 400));
         }
-        const product = yield product_model_1.Product.findById(productId).select("-__v");
+        const product = yield product_model_1.Product.findById(productId).populate("category_id", "_id category_name").select("-__v");
         if (!product)
             return next(new ErrorHandler_1.default("Product is not found!", 404));
         return res.status(200).json({

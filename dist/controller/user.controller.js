@@ -12,10 +12,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.userProfile = exports.userLogout = exports.userLogin = exports.userRegistration = void 0;
+exports.getUserProfileById = exports.userProfile = exports.userLogout = exports.userLogin = exports.userRegistration = void 0;
 const asyncerror_middleware_1 = require("../middlewares/asyncerror.middleware");
 const ErrorHandler_1 = __importDefault(require("../utils/ErrorHandler"));
 const user_model_1 = require("../models/user.model");
+const address_model_1 = require("../models/address.model");
+const order_model_1 = require("../models/order.model");
 exports.userRegistration = (0, asyncerror_middleware_1.CatchAsyncError)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { name, email, password } = req.body;
@@ -141,10 +143,38 @@ exports.userProfile = (0, asyncerror_middleware_1.CatchAsyncError)((req, res, ne
             return next(new ErrorHandler_1.default("User doesn't exists!", 404));
         return res.status(200).json({
             success: true,
-            user
+            user,
         });
     }
     catch (error) {
         return next(new ErrorHandler_1.default(error.message, 500));
+    }
+}));
+// for admin
+exports.getUserProfileById = (0, asyncerror_middleware_1.CatchAsyncError)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { userId } = req.params;
+        if (!userId)
+            return next(new ErrorHandler_1.default("user id is required!", 400));
+        const user = yield user_model_1.User.findById(userId).lean();
+        if (!user)
+            return next(new ErrorHandler_1.default("user not found!", 404));
+        const userAddress = yield address_model_1.Address.findOne({
+            userId,
+        }).lean();
+        const userOrders = yield order_model_1.Order.find({
+            userId,
+        })
+            .populate("products.productId", "product_name price description quantity images")
+            .select("-userId -addressId")
+            .lean();
+        const newUser = Object.assign(Object.assign({}, user), { address: userAddress || null, orders: userOrders || null });
+        return res.status(200).json({
+            success: true,
+            user: newUser,
+        });
+    }
+    catch (error) {
+        return next(new ErrorHandler_1.default((error === null || error === void 0 ? void 0 : error.message) || "something went wrong while getting user by id!", 500));
     }
 }));
